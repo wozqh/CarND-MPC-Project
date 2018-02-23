@@ -2,6 +2,50 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Intro
+This repository is about my solution to the Udacity SDCND MPC Project.See picture below.
+![image text](demo.png)
+This solution,as the lessons suggest, makes use of the IPOPT and CPPAD libraries to calculate an optimal trajectory and its associated actuation commands in order to minimize error with a third-degree polynomial fit to the given waypoints. The optimization considers only a short duration's worth of waypoints, and produces a trajectory for that duration based upon a model of the vehicle's kinematics and a cost function based mostly on the vehicle's cross-track error (roughly the distance from the track waypoints) and orientation angle error,with other cost factors included to improve performance.
+
+## Rubric Points
+### The model-- Student describes their model in detail. This includes the state,actuators and update equations.
+- x:The x position of the vehicle.
+- y:The y position of the vehicle.
+- psi:The orientation of the vehicle.
+- v:The current velocity.
+- cte: The Cross-Track-Error.
+- epsi: The orientation error.
+
+```
+The Update equation is following:
+x[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+y[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+psi[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+v[t+1] = v[t] + a[t] * dt
+cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * d
+```
+### Timestep Length and Elapsed Duration (N & dt)-- Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values.Additionally the student details the previous values tried.
+
+After several tryout,finally I changed the values to N = 10 and dt  = 0.1 instead of initial value N = 20 and dt = 0.01.
+- If dt is too large, the calculation error would increase.If it was too small, the trajectory calculation may take too long.
+- Because we use 100ms latency,so I choose the larger value to deal with the latency.
+- Smaller value than N=10 is not enough to calculate the trajectory.
+
+### Polynomial Fitting and MPC Preprocessing.
+The waypoints provided by the simulator are prepocessed by transorming them from the world's to vehicle's reference frame(see lines 107-113).Then they are fed to the polyfit function to find coefficients of a 3rd order polynomial.
+
+### Model Predictive Control with Latency.
+When dealing with the latency, I choose dt=0.1. And, I also incorporated latency into the model.
+```
+fg[1 + x_start + i] = x_1 - (x_0 + v_0 * CppAD::cos(psi_0) * dt);
+fg[1 + y_start + i] = y_1 - (y_0 + v_0 * CppAD::sin(psi_0) * dt);
+fg[1 + psi_start + i] = psi_1 - (psi_0 - v_0/Lf * delta * dt);
+fg[1 + v_start + i] = v_1 - (v_0 + a * dt);
+fg[1 + cte_start + i] = cte_1 - ((f_0 - y_0) + (v_0 * CppAD::sin(epsi_0) * dt));
+fg[1 + epsi_start + i] = epsi_1 - ((psi_0 - psides_0) - v_0/Lf * delta * dt);
+```
+
 
 ## Dependencies
 
@@ -106,3 +150,4 @@ still be compilable with cmake and make./
 
 ## How to write a README
 A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+# CarND-MPC-Project
