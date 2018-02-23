@@ -99,8 +99,6 @@ int main() {
           *
           */
           
-          //vector<double> waypoints_x;
-          //vector<double> waypoints_y;
           Eigen::VectorXd ptrx(ptsx.size());
           Eigen::VectorXd ptry(ptsy.size());
 
@@ -108,19 +106,9 @@ int main() {
           for (int i = 0;i < ptsx.size(); i++) {
             double diff_x = ptsx[i] - px;
             double diff_y = ptsy[i] - py;
-
             ptrx[i] = diff_x * cos(-psi) - diff_y * sin(-psi);
             ptry[i] = diff_x * sin(-psi) + diff_y * cos(-psi);
-
-            //waypoints_x.push_back(diff_x * cos(-psi) - diff_y * sin(-psi));
-            //waypoints_y.push_back(diff_x * sin(-psi) + diff_y * cos(-psi));
           }
-
-          //double* ptrx = &waypoints_x[0];
-          //double* ptry = &waypoints_y[0];
-          //Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx,6);
-          //Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry,6);
-          
 
           auto coeffs = polyfit(ptrx,ptry,3);
           //auto coeffs = polyfit(waypoints_x_eig,waypoints_y_eig,3);
@@ -129,8 +117,6 @@ int main() {
           
           double steer_value;
           double throttle_value;
-          //steer_value = j[1]["steering_angle"];
-          //throttle_value = j[1]["throttle"];
           
           Eigen::VectorXd state(6);
           state << 0,0,0,v,cte,epsi;
