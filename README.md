@@ -36,8 +36,17 @@ After several tryout,finally I changed the values to N = 10 and dt  = 0.1 instea
 The waypoints provided by the simulator are prepocessed by transorming them from the world's to vehicle's reference frame(see lines 107-113).Then they are fed to the polyfit function to find coefficients of a 3rd order polynomial.
 
 ### Model Predictive Control with Latency.
-When dealing with the latency, I choose dt=0.1. And, I also incorporated latency into the model.
+The solution given by MPC is meant for immediate effect but when the actuator receives them, it will already be 100ms late.Therefore,to mitigate this problem,we need to send them correct values that are meant for after 100ms.The most common way is to use kinematic equations to predict the states for after 100ms before sending them to MPC.The update can be placed before polynomial fitting using global map coordinate,or after polynomial fitting and use vehicle map coordinate.
+I update after polynomial fitting,it invoves 2 steps:
+- At current time t=0,your car's states are px=0,py=0,psi=0 right after converting to car coordinate.There you calculte cte and epsi
 ```
+double cte = polyeval(coeffs, 0); //because px=py=0
+double epsi = -atan(coeffs[1]); //because px=psi=0
+```
+- Now predict all the states for t=dt.
+
+```
+// Setup the rest of the model constraints
 fg[1 + x_start + i] = x_1 - (x_0 + v_0 * CppAD::cos(psi_0) * dt);
 fg[1 + y_start + i] = y_1 - (y_0 + v_0 * CppAD::sin(psi_0) * dt);
 fg[1 + psi_start + i] = psi_1 - (psi_0 - v_0/Lf * delta * dt);
