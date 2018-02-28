@@ -91,6 +91,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double a_th = j[1]["throttle"];
           
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -98,12 +100,19 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
+         
+          //Predict the vehicle state into the future by the latency time 100ms
+          double latency = 0.1;
+          px = px + v*cos(psi)*latency;
+          py = py + v*sin(psi)*latency;
+          psi = psi - v*delta/2.67*latency;
+          v = v + a_th*latency;
           
           Eigen::VectorXd ptrx(ptsx.size());
           Eigen::VectorXd ptry(ptsy.size());
 
           // transform waypoints to be from car's perspective
-          for (int i = 0;i < ptsx.size(); i++) {
+          for (unsigned int i = 0;i < ptsx.size(); i++) {
             double diff_x = ptsx[i] - px;
             double diff_y = ptsy[i] - py;
             ptrx[i] = diff_x * cos(-psi) - diff_y * sin(-psi);
@@ -114,12 +123,26 @@ int main() {
           //auto coeffs = polyfit(waypoints_x_eig,waypoints_y_eig,3);
           double cte = polyeval(coeffs, 0);
           double epsi = -atan(coeffs[1]);
+
+          // //Center of gravity related to psi and epsi
+          // const double Lf = 2.67;
+          // // Latency
+          // const double latency = 0.1;
+
+          // // Predict the vehicle state into the future by the latency time.
+          // double px1 = v * latency; 
+          // double py1 = 0.0;
+          // double psi1 = -v * delta * latency / Lf;
+          // double v1 = v + a_th * latency;
+          // double cte1 = cte + v * sin(epsi)*latency;
+          // double epsi1 = epsi - v * delta * latency/Lf;
           
           double steer_value;
           double throttle_value;
           
           Eigen::VectorXd state(6);
           state << 0,0,0,v,cte,epsi;
+          //state << px1,py1,psi1,v1,cte1,epsi1;
           auto varesponse = mpc.Solve(state,coeffs);
           steer_value = varesponse[0];
           throttle_value = varesponse[1];
@@ -136,7 +159,7 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-          for (int i = 2; i < varesponse.size(); i++) {
+          for (unsigned int i = 2; i < varesponse.size(); i++) {
             if (i%2 == 1) {
               mpc_y_vals.push_back(varesponse[i]);
             }
