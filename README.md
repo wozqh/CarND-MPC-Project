@@ -37,24 +37,20 @@ The waypoints provided by the simulator are prepocessed by transorming them from
 
 ### Model Predictive Control with Latency.
 The solution given by MPC is meant for immediate effect but when the actuator receives them, it will already be 100ms late.Therefore,to mitigate this problem,we need to send them correct values that are meant for after 100ms.The most common way is to use kinematic equations to predict the states for after 100ms before sending them to MPC.The update can be placed before polynomial fitting using global map coordinate,or after polynomial fitting and use vehicle map coordinate.
-I update after polynomial fitting,it invoves 2 steps:
-- At current time t=0,your car's states are px=0,py=0,psi=0 right after converting to car coordinate.There you calculte cte and epsi
+I update before polynomial fitting,it invoves 2 steps:
+- Predict all the states for t=latency
+```
+double latency = 0.1;
+px = px + v*cos(psi)*latency;
+py = py + v*sin(psi)*latency;
+psi = psi - v*delta/2.67*latency;
+v = v + a_th*latency;
+```
+-After converting to car coordinate.There I calculte cte and epsi
 ```
 double cte = polyeval(coeffs, 0); //because px=py=0
 double epsi = -atan(coeffs[1]); //because px=psi=0
 ```
-- Now predict all the states for t=dt.
-
-```
-// Setup the rest of the model constraints
-fg[1 + x_start + i] = x_1 - (x_0 + v_0 * CppAD::cos(psi_0) * dt);
-fg[1 + y_start + i] = y_1 - (y_0 + v_0 * CppAD::sin(psi_0) * dt);
-fg[1 + psi_start + i] = psi_1 - (psi_0 - v_0/Lf * delta * dt);
-fg[1 + v_start + i] = v_1 - (v_0 + a * dt);
-fg[1 + cte_start + i] = cte_1 - ((f_0 - y_0) + (v_0 * CppAD::sin(epsi_0) * dt));
-fg[1 + epsi_start + i] = epsi_1 - ((psi_0 - psides_0) - v_0/Lf * delta * dt);
-```
-
 
 ## Dependencies
 
